@@ -24,7 +24,7 @@ DOCKER:
 
 Deployment:
     create image with username of DockerHub (ex: jayroy/bukserver)
-    use deployment file to deploy zero down time deployment (Used RollBack)
+    use deployment file to deploy zero down time deployment (Used RollBack) (Beta/UnTested)
           strategy:
             type: RollingUpdate (Supporting rollback)
             rollingUpdate:
