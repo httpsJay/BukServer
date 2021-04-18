@@ -1,10 +1,10 @@
-NAME=bukukas-server
+NAME=buk-server
 
 local-binary:
 	go build -o ${NAME} main.go
 
 local-binary-run:
-	./bukukas-server
+	./buk-server
 
 docker-build-image:
 	docker build -t jayroy/bukserver .
