@@ -1,0 +1,32 @@
+Project Descripton:
+This Repo consist of
+    1. Client to interect with Server API (./client)
+    2. Server/Service code (./svc + main.go)
+    3. In-Memory DataStore (./store)
+    4. Dockerfile to create docker image of service binary
+    5. deployment.yaml (deployment file with Zero Down Time config, ROLEBACK)
+    6. Makefile to help
+
+LOCAL:
+    CONSOLE 1: (Service)
+        make local-binary
+        make local-binary-run
+    CONSOLE 2: (TestClient)
+        make test 
+
+DOCKER:
+    CONSOLE 1: (Service)
+        make docker-build-image
+        make docker-run
+    CONSOLE 2: (TestClient)
+        make test 
+
+
+Deployment:
+    create image with username of DockerHub (ex: jayroy/bukserver)
+    use deployment file to deploy zero down time deployment (Used RollBack) (Beta/UnTested)
+          strategy:
+            type: RollingUpdate (Supporting rollback)
+            rollingUpdate:
+            maxUnavailable: 0   (will Never allow Unavailable pods) (Zero Down Time) 
+            maxSurge: 1
