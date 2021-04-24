@@ -1,17 +1,15 @@
 package svc
 
 import (
-	"bukukas/store"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 
 	"github.com/gorilla/mux"
 )
 
 // Create a global package level In-Mem DB map
-var db = store.Create()
+var db = Create()
 
 // Dummy Home url
 func homePage(w http.ResponseWriter, r *http.Request) {
@@ -31,18 +29,22 @@ type ListResponse struct {
 
 // Search route with suffix filter
 func searchWithSuffix(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("searchWithSuffix()")
+	fmt.Println("\nsearchWithSuffix()")
 	vars := mux.Vars(r)
 	filterStr := vars["str"]
 
 	fmt.Println("suffix : ", filterStr)
 
+	c := make(chan []string)
+	m := PREFIXChanMessage{filterStr, c}
+	// sending using channel
+	db.PREFIXChan <- m
+
 	res := new(ListResponse)
-	for key := range db.Data {
-		if matched, _ := regexp.MatchString(".*"+filterStr, key); matched {
-			res.List = append(res.List, key)
-		}
-	}
+	// receiving response from returnChannel
+	res.List = <-c
+	close(c)
+
 	fmt.Println("response : ", res)
 
 	js, err := json.Marshal(res)
@@ -50,7 +52,6 @@ func searchWithSuffix(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 
@@ -58,18 +59,22 @@ func searchWithSuffix(w http.ResponseWriter, r *http.Request) {
 
 // Search route with prefix filter
 func searchWithPrefix(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("searchWithPrefix()")
+	fmt.Println("\nsearchWithPrefix()")
 	vars := mux.Vars(r)
 	filterStr := vars["str"]
 
 	fmt.Println("prefix : ", filterStr)
 
+	c := make(chan []string)
+	m := PREFIXChanMessage{filterStr, c}
+	// sending using channel
+	db.PREFIXChan <- m
+
 	res := new(ListResponse)
-	for key := range db.Data {
-		if matched, _ := regexp.MatchString(filterStr+".*", key); matched {
-			res.List = append(res.List, key)
-		}
-	}
+	// receiving response from returnChannel
+	res.List = <-c
+	close(c)
+
 	fmt.Println("response : ", res)
 
 	js, err := json.Marshal(res)
@@ -77,7 +82,6 @@ func searchWithPrefix(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 
@@ -90,20 +94,29 @@ func getKey(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("\nget - Key [%s]", key)
 
-	value := db.Get(key)
+	c := make(chan string)
+	m := GETChanMessage{key, c}
+	db.GETChan <- m
+	value := <-c
+	close(c)
 
-	res := new(KeyResponse)
-	res.Value = value
+	if value == "ERROR: NOT FOUND" {
+		http.NotFound(w, r)
 
-	js, err := json.Marshal(res)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	} else {
+		// fmt.Fprint(w, value)
+		res := new(KeyResponse)
+		res.Value = value
+
+		js, err := json.Marshal(res)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-
 }
 
 // Used for /set route
@@ -112,9 +125,12 @@ func setKeyValue(w http.ResponseWriter, r *http.Request) {
 	key := vars["key"]
 	value := vars["value"]
 
-	fmt.Println("\nSet Key : ", key, ", Value : ", value)
+	fmt.Println("\nSet ", key, " -> ", value)
 
-	db.Set(key, value)
-	fmt.Printf("DataBase Data : %#v", db.Data)
+	m := make(map[string]string)
+	m["key"] = key
+	m["value"] = value
+	db.SETChan <- m
+
 	return
 }
