@@ -1,6 +1,10 @@
 package main
 
-import "testing"
+import (
+	"reflect"
+	"sort"
+	"testing"
+)
 
 func TestSet(t *testing.T) {
 	testTable := []struct {
@@ -68,9 +72,14 @@ func TestSearchPrefix(t *testing.T) {
 		if err != nil {
 			t.Errorf("error. %s", err)
 		}
+
+		// checking without order
+		sort.Strings(resp)
+		sort.Strings(table.res)
+
 		// TODO: check each result in list
-		if len(resp) != len(table.res) {
-			t.Errorf("Key [%s] - Return[%v].", table.x, table.res)
+		if !reflect.DeepEqual(resp, table.res) {
+			t.Errorf("Key [%s] - Return[%v]. - RESPONSE - [%v]", table.x, table.res, resp)
 		}
 	}
 }
@@ -90,9 +99,13 @@ func TestSearchSuffix(t *testing.T) {
 		if err != nil {
 			t.Errorf("error. %s", err)
 		}
+		// checking without order
+		sort.Strings(resp)
+		sort.Strings(table.res)
+
 		// TODO: check each result in list
-		if len(resp) != len(table.res) {
-			t.Errorf("Key [%s] - Return[%v].", table.x, table.res)
+		if !reflect.DeepEqual(resp, table.res) {
+			t.Errorf("Key [%s] - Return[%v]. - RESPONSE - [%v]", table.x, table.res, resp)
 		}
 	}
 }
