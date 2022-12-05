@@ -2,7 +2,7 @@ Project Descripton:
 This Repo consist of
     1. Client to interect with Server API (./client)
     2. Server/Service code (./svc + main.go)
-    3. In-Memory DataStore (./store)
+    3. In-Memory DataStore (./svc/store)
     4. Dockerfile to create docker image of service binary
     5. deployment.yaml (deployment file with Zero Down Time config, ROLEBACK)
     6. Makefile to help
